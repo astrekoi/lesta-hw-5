@@ -1,0 +1,55 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create .env file
+        uses: ozaytsev86/create-env-file@v2.0.0
+        with:
+          ENV_API_PORT: ${{ secrets.API_PORT }}
+          ENV_POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          ENV_POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          ENV_POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          ENV_NGINX_HOST_PORT: ${{ secrets.NGINX_HOST_PORT }}
+          ENV_NGINX_LISTEN_PORT: ${{ secrets.NGINX_LISTEN_PORT }}
+
+      - name: Build images
+        run: |
+          docker-compose -f docker-compose.yml build
+          docker-compose -f docker-compose.yml push
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          script: |
+            cd /opt/lesta-start
+            git pull origin main
+            docker-compose down
+            docker-compose pull
+            docker-compose run --rm backend migrate up
+            docker-compose --env-file .env up -d --build
+            docker system prune -f
+
+      - name: Validate deployment
+        uses: appleboy/ssh-action@v1
+        with:
+          script: |
+            curl -sSf http://localhost:$NGINX_LISTEN_PORT/health
+            docker-compose logs --tail=100 backend
+
+      - name: Scan Docker images
+        run: docker scan lesta-start:7.1
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: go-app-binary
+          path: |
+            api/cmd/demo/main.go
+            bin/web
