@@ -10,6 +10,8 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
+      API_PORT: ${API_PORT}
+      DB_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       <<: *shared-env
     depends_on:
       postgres:
