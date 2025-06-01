@@ -11,8 +11,8 @@ jobs:
 
       - name: Build images
         run: |
-          docker-compose -f docker-compose.yml build
-          docker-compose -f docker-compose.yml push
+          docker compose -f docker-compose.yml build
+          docker compose -f docker-compose.yml push
 
       - name: Prepare .env content
         id: prepare-env
@@ -39,10 +39,10 @@ jobs:
             cat << EOF > .env
             ${{ env.ENV_CONTENT }}
             EOF
-            docker-compose down
-            docker-compose pull
-            docker-compose run --rm backend migrate up
-            docker-compose --env-file .env up -d --build
+            docker compose down
+            docker compose pull
+            docker compose run --rm backend migrate up
+            docker compose --env-file .env up -d --build
             docker system prune -f
             rm .env
 
@@ -54,7 +54,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             curl -sSf http://localhost:${{ secrets.NGINX_LISTEN_PORT }}/health
-            docker-compose logs --tail=100 backend
+            docker compose logs --tail=100 backend
 
       - name: Scan Docker images
         run: docker scan lesta-start:7.1
