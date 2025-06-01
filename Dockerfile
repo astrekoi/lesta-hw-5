@@ -1,14 +1,18 @@
-FROM golang:1.21-alpine AS builder
-WORKDIR /app
+# Stage 1: Build
+FROM golang:1.21.5-alpine AS builder
+WORKDIR /go-app
 COPY api/go.mod api/go.sum ./
 RUN go mod download
-COPY api/ ./
-RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/web ./cmd/demo/main.go
+COPY api/cmd api/cmd
+COPY api/internal api/internal
+COPY api/docs api/docs
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /bin/go-app ./cmd/demo/main.go
 
-FROM artifactory.lstprod.net/midi_docker/golang:1.21.5-alpine3.19 as runtime
+FROM golang:1.24.3-alpine3.22
 ENV API_PORT="${API_PORT}" \
     DB_URL="${DB_URL}"
 USER 1000:1000
-COPY --from=builder /bin/web /bin/web
-EXPOSE 8080
-CMD ["/bin/web"]
+COPY --from=builder --chown=1000:1000 /bin/go-app /app/
+RUN chmod +x /app/go-app
+EXPOSE ${API_PORT:-8080}
+CMD ["/app/go-app"]
