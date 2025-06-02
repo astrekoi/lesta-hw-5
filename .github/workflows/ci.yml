@@ -47,5 +47,5 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            curl -sSf http://localhost:${{ secrets.NGINX_PORT }}/health
+            curl -sSf http://localhost:${{ secrets.NGINX_PORT }}/ping
             docker compose ps
