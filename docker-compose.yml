@@ -24,7 +24,9 @@ services:
     image: nginx:alpine
     ports:
       - "${NGINX_PORT}:80"
+    environment:
+      API_PORT: ${API_PORT}
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/templates:/etc/nginx/templates
     depends_on:
       - backend

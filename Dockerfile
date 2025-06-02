@@ -2,9 +2,10 @@ FROM golang:1.21.5-alpine AS builder
 WORKDIR /go-app
 COPY api/go.mod api/go.sum ./
 RUN go mod download
-COPY api/cmd api/cmd
-COPY api/internal api/internal
-COPY api/docs api/docs
+
+COPY api/cmd ./cmd
+COPY api/internal ./internal
+COPY api/docs ./docs
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /bin/go-app ./cmd/demo/main.go
 
 FROM golang:1.24.3-alpine3.22
