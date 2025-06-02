@@ -106,4 +106,4 @@
 
 ## Проверка работы
 
-Успешную проверку работы можно увидеть во вкладке Actions в пункте "Verify deployment"
+Успешную проверку работы можно увидеть во вкладке Actions в пункте ["Verify deployment"](https://github.com/astrekoi/lesta-hw-5/actions)
