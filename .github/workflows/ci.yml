@@ -42,6 +42,8 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
+            echo "repo: ${{ github.repository }}"
+
             sudo mkdir -p /opt/lesta-start
             sudo chown -R $USER:$USER /opt/lesta-start
 
@@ -66,5 +68,6 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
+            sleep 10
             curl -sSf http://localhost:${{ secrets.NGINX_PORT }}/ping
-            docker compose ps
+            docker ps
