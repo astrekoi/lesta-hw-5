@@ -26,6 +26,13 @@ jobs:
           docker compose -f docker-compose.yml build
           docker compose -f docker-compose.yml push
 
+      - name: Prepare .env content
+        id: prepare-env
+        run: |
+          echo "ENV_CONTENT<<EOF" >> $GITHUB_ENV
+          cat .env >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       - name: Deploy to production
         uses: appleboy/ssh-action@v1
         with:
@@ -33,10 +40,19 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
+            mkdir -p /opt/lesta-start
             cd /opt/lesta-start
+            if [ ! -d .git ]; then
+              git clone ${{ github.repository_url }} .
+              git checkout main
+            fi
+            
             git pull origin main
+            cat << EOF > .env
+            ${{ env.ENV_CONTENT }}
+            EOF
+            
             docker compose down
-            docker compose pull
             docker compose --env-file .env up -d --build
             docker system prune -f
 
