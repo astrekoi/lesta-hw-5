@@ -1,34 +1,32 @@
-# Not work( 🥲
 name: Deploy
 
 on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
+    env:
+      COMPOSE_PROJECT_NAME: lesta-start
+    
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Build images
-        run: |
-          docker compose -f docker-compose.yml build
-          docker compose -f docker-compose.yml push
-
-      - name: Prepare .env content
-        id: prepare-env
+      - name: Create .env file
         run: |
           echo "API_PORT=${{ secrets.API_PORT }}" > .env
           echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
           echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
           echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
-          echo "NGINX_HOST_PORT=${{ secrets.NGINX_HOST_PORT }}" >> .env
-          echo "NGINX_LISTEN_PORT=${{ secrets.NGINX_LISTEN_PORT }}" >> .env
-          echo "ENV_CONTENT<<EOF" >> $GITHUB_ENV
-          cat .env >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          echo "NGINX_PORT=${{ secrets.NGINX_PORT }}" >> .env
 
-      - name: Deploy via SSH
+      - name: Build Docker images
+        run: |
+          docker compose -f docker-compose.yml build
+          docker compose -f docker-compose.yml push
+
+      - name: Deploy to production
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -37,33 +35,17 @@ jobs:
           script: |
             cd /opt/lesta-start
             git pull origin main
-            cat << EOF > .env
-            ${{ env.ENV_CONTENT }}
-            EOF
             docker compose down
             docker compose pull
-            docker compose run --rm backend migrate up
             docker compose --env-file .env up -d --build
             docker system prune -f
-            rm .env
 
-      - name: Validate deployment
+      - name: Verify deployment
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            curl -sSf http://localhost:${{ secrets.NGINX_LISTEN_PORT }}/health
-            docker compose logs --tail=100 backend
-
-      - name: Scan Docker images
-        run: docker scan lesta-start:7.1
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: go-app-binary
-          path: |
-            api/cmd/demo/main.go
-            bin/web
+            curl -sSf http://localhost:${{ secrets.NGINX_PORT }}/health
+            docker compose ps
