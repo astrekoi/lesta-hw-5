@@ -23,11 +23,6 @@ jobs:
           echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> .env
           echo "NGINX_PORT=${{ secrets.NGINX_PORT }}" >> .env
 
-      - name: Build Docker images
-        run: |
-          docker compose -f docker-compose.yml build
-          docker compose -f docker-compose.yml push
-
       - name: Prepare .env content
         id: prepare-env
         run: |
@@ -42,7 +37,8 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            echo "repo: ${{ github.repository }}"
+            echo "FIRST repo: ${{ github.repository }}"
+            echo "SECOND repo: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git"
 
             sudo mkdir -p /opt/lesta-start
             sudo chown -R $USER:$USER /opt/lesta-start
@@ -53,6 +49,7 @@ jobs:
             fi
 
             git pull origin main
+
             cat << EOF > .env
             ${{ env.ENV_CONTENT }}
             EOF
