@@ -1,4 +1,3 @@
-# Stage 1: Build
 FROM golang:1.21.5-alpine AS builder
 WORKDIR /go-app
 COPY api/go.mod api/go.sum ./
