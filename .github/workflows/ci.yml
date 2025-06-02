@@ -42,18 +42,19 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
-            mkdir -p /opt/lesta-start
+            sudo mkdir -p /opt/lesta-start
+            sudo chown -R $USER:$USER /opt/lesta-start
+
             cd /opt/lesta-start
             if [ ! -d .git ]; then
-              git clone ${{ github.repository_url }} .
-              git checkout main
+              git clone https://github.com/astrekoi/lesta-hw-5.git .
             fi
-            
+
             git pull origin main
             cat << EOF > .env
             ${{ env.ENV_CONTENT }}
             EOF
-            
+
             docker compose down
             docker compose --env-file .env up -d --build
             docker system prune -f
