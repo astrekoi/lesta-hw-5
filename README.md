@@ -102,3 +102,8 @@
 
 [Доступ к Swagger UI](http://localhost:8088/swagger/index.html) после успешного запуска.
 
+![Swagger UI](images/image.png)
+
+## Проверка работы
+
+Успешную проверку работы можно увидеть во вкладке Actions в пункте "Verify deployment"
